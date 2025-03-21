@@ -32,7 +32,7 @@
     <h1>March 2025 Special Waiver Approval</h1>
     <div class="container">
         <label>Contract ID:</label>
-        <input type="text" id="contractID">
+        <input type="text" id="contract ID">
         <br>
         <label>Customer Name:</label>
         <input type="text" id="customerName" readonly>
@@ -59,8 +59,8 @@
         }
 
         function calculateWaiver() {
-            const contractID = document.getElementById('contractID').value;
-            const record = jsonData.find(entry => entry["Contract ID"] === contractID);
+            const contractID = document.getElementById('contract ID').value;
+            const record = jsonData.find(entry => entry["Contract ID"] === contract ID);
 
             if (!record) {
                 alert("Invalid Contract ID");
@@ -88,7 +88,7 @@
         }
 
         function resetFields() {
-            document.getElementById('contractID').value = "";
+            document.getElementById('contract ID').value = "";
             document.getElementById('customerName').value = "";
             document.getElementById('lsaValue').value = "";
             document.getElementById('waiver').value = "";
