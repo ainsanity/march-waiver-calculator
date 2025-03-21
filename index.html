@@ -13,89 +13,102 @@
             padding: 20px;
         }
         .container {
-            background: rgba(255, 255, 255, 0.1);
+            max-width: 400px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.2);
             padding: 20px;
             border-radius: 10px;
-            display: inline-block;
         }
         input, button {
+            width: 100%;
             padding: 10px;
-            margin: 10px;
+            margin: 10px 0;
             font-size: 16px;
         }
         button {
+            background: #ff9800;
+            border: none;
+            color: white;
+            font-weight: bold;
             cursor: pointer;
+        }
+        button:hover {
+            background: #e68900;
         }
     </style>
 </head>
 <body>
-    <h1>March 2025 Special Waiver Approval</h1>
+
+    <h2>March 2025 Special Waiver Approval</h2>
+
     <div class="container">
-        <label>Contract ID:</label>
-        <input type="text" id="contract ID">
-        <br>
-        <label>Customer Name:</label>
-        <input type="text" id="customerName" readonly>
-        <br>
-        <label>LSA Value:</label>
-        <input type="text" id="lsaValue" readonly>
-        <br>
-        <label>Waiver %:</label>
-        <input type="text" id="waiver" readonly>
-        <br>
-        <label>Offerable Amount:</label>
-        <input type="text" id="offerableAmount" readonly>
-        <br>
-        <button onclick="calculateWaiver()">Calculate</button>
+        <label>Enter Contract ID:</label>
+        <input type="number" id="contractID" placeholder="Enter Contract ID">
+        <button onclick="fetchDetails()">Calculate</button>
         <button onclick="resetFields()">Reset</button>
+
+        <h3>Details</h3>
+        <p><strong>Customer Name:</strong> <span id="customerName">-</span></p>
+        <p><strong>LSA Value:</strong> <span id="lsaValue">-</span></p>
+        <p><strong>Vintage:</strong> <span id="vintage">-</span></p>
+        <p><strong>Waiver %:</strong> <span id="waiver">-</span></p>
+        <p><strong>Offerable Amount:</strong> <span id="offerableAmount">-</span></p>
     </div>
 
     <script>
-        let jsonData;
+        let jsonData = [];
 
-        async function loadData() {
-            const response = await fetch('database.json'); // Ensure 'database.json' is in the same directory
-            jsonData = await response.json();
-        }
+        // Load JSON file
+        fetch("database.json")
+            .then(response => response.json())
+            .then(data => jsonData = data)
+            .catch(error => console.error("Error loading JSON:", error));
 
-        function calculateWaiver() {
-            const contractID = document.getElementById('contract ID').value;
-            const record = jsonData.find(entry => entry["Contract ID"] === contract ID);
+        function fetchDetails() {
+            const enteredID = parseInt(document.getElementById("contractID").value.trim());
 
-            if (!record) {
-                alert("Invalid Contract ID");
+            // Find the contract in the JSON data
+            const result = jsonData.find(entry => entry["Contract ID"] === enteredID);
+
+            if (!result) {
+                alert("Invalid Contract ID. Please check and try again.");
                 return;
             }
 
-            document.getElementById('customerName').value = record["Customer Name"];
-            document.getElementById('lsaValue').value = record["LSA Value"];
+            // Extract values
+            const lsaValue = parseFloat(result["LSA Value"]);
+            const vintage = result["Vintage"];
+            let waiverPercentage = 0;
 
-            let waiverPercent = 0;
-            const lsaValue = parseInt(record["LSA Value"]);
-            const vintage = record["Vintage"];
-
+            // Apply waiver rules
             if (lsaValue <= 100000) {
-                waiverPercent = 70;
+                waiverPercentage = 70;
             } else if (lsaValue > 100000 && lsaValue <= 1000000) {
-                waiverPercent = vintage.includes("< 12 Months") ? 75 : 80;
+                waiverPercentage = vintage === "< 12 Months" ? 75 : 80;
             } else if (lsaValue > 1000000) {
-                waiverPercent = vintage.includes("< 12 Months") ? 65 : 75;
+                waiverPercentage = vintage === "< 12 Months" ? 65 : 75;
             }
 
-            const offerableAmount = Math.ceil(lsaValue * (1 - waiverPercent / 100));
-            document.getElementById('waiver').value = waiverPercent + "%";
-            document.getElementById('offerableAmount').value = offerableAmount;
+            // Calculate offerable amount
+            const offerableAmount = Math.ceil(lsaValue * (1 - waiverPercentage / 100));
+
+            // Display results
+            document.getElementById("customerName").textContent = result["Customer Name"];
+            document.getElementById("lsaValue").textContent = lsaValue.toLocaleString();
+            document.getElementById("vintage").textContent = vintage;
+            document.getElementById("waiver").textContent = waiverPercentage + "%";
+            document.getElementById("offerableAmount").textContent = offerableAmount.toLocaleString();
         }
 
         function resetFields() {
-            document.getElementById('contract ID').value = "";
-            document.getElementById('customerName').value = "";
-            document.getElementById('lsaValue').value = "";
-            document.getElementById('waiver').value = "";
-            document.getElementById('offerableAmount').value = "";
+            document.getElementById("contractID").value = "";
+            document.getElementById("customerName").textContent = "-";
+            document.getElementById("lsaValue").textContent = "-";
+            document.getElementById("vintage").textContent = "-";
+            document.getElementById("waiver").textContent = "-";
+            document.getElementById("offerableAmount").textContent = "-";
         }
-
-        loadData();
     </script>
+
 </body>
 </html>
