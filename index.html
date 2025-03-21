@@ -7,77 +7,93 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(to right, #1E3C72, #2A5298);
+            background: linear-gradient(to right, #4b6cb7, #182848);
             color: white;
             text-align: center;
             padding: 20px;
         }
         .container {
+            max-width: 400px;
+            margin: auto;
             background: rgba(255, 255, 255, 0.1);
             padding: 20px;
             border-radius: 10px;
-            display: inline-block;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
         }
         input, button {
             font-size: 18px;
             padding: 10px;
             margin: 10px;
+            width: 90%;
+            border-radius: 5px;
+            border: none;
+        }
+        input {
+            text-align: center;
+        }
+        button {
+            background-color: #ff9800;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e68900;
+        }
+        #resultBox {
+            display: none;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>March 2025 Special Waiver Approval</h1>
+    <h2>March 2025 Special Waiver Approval</h2>
+
     <div class="container">
-        <label for="contractId">Enter Contract ID:</label>
-        <input type="text" id="contractId" placeholder="Enter Contract ID">
-        <button onclick="fetchDetails()">Calculate</button>
-        <button onclick="resetFields()">Reset</button>
+        <label for="contractID">Enter Contract ID:</label>
+        <input type="text" id="contractID" placeholder="Enter Contract ID">
+        <button onclick="searchContract()">Calculate</button>
+        <button onclick="resetForm()">Reset</button>
+
+        <div id="resultBox">
+            <h3>Contract Details</h3>
+            <p><strong>Customer Name:</strong> <span id="customerName"></span></p>
+            <p><strong>LSA Value:</strong> <span id="lsaValue"></span></p>
+            <p><strong>Vintage:</strong> <span id="vintage"></span></p>
+        </div>
     </div>
-    <div id="result" class="container" style="display:none; margin-top: 20px;"></div>
 
     <script>
-        let jsonData;
-
-        // Load JSON Data
-        fetch('Database.json')
-            .then(response => response.json())
-            .then(data => jsonData = data)
-            .catch(error => console.error('Error loading JSON:', error));
-
-        function fetchDetails() {
-            let contractId = document.getElementById("contractId").value.trim();
-            let resultDiv = document.getElementById("result");
+        function searchContract() {
+            let contractID = document.getElementById("contractID").value.trim();
             
-            let record = jsonData.find(item => item["Contract No"].toString() === contractId);
-            
-            if (record) {
-                let waiverPercentage = getWaiverPercentage(record["Vintage"], record["LSA Value"]);
-                let offerableAmount = Math.ceil(record["LSA Value"] * (1 - waiverPercentage / 100));
-                
-                resultDiv.innerHTML = `
-                    <p><strong>Customer Name:</strong> ${record["Customer Name"]}</p>
-                    <p><strong>LSA Value:</strong> ₹${record["LSA Value"].toLocaleString()}</p>
-                    <p><strong>Waiver %:</strong> ${waiverPercentage}%</p>
-                    <p><strong>Offerable Amount:</strong> ₹${offerableAmount.toLocaleString()}</p>
-                `;
-                resultDiv.style.display = "block";
-                alert(`Customer: ${record["Customer Name"]}\nLSA Value: ₹${record["LSA Value"]}\nWaiver: ${waiverPercentage}%\nOfferable Amount: ₹${offerableAmount}`);
-            } else {
-                alert("Invalid Contract ID");
-                resultDiv.style.display = "none";
+            if (!contractID) {
+                alert("Please enter a Contract ID.");
+                return;
             }
+
+            fetch("Database.json")
+                .then(response => response.json())
+                .then(data => {
+                    let result = data.find(entry => entry["Contract ID"] === contractID);
+
+                    if (result) {
+                        document.getElementById("customerName").textContent = result["Customer Name"];
+                        document.getElementById("lsaValue").textContent = result["LSA Value"];
+                        document.getElementById("vintage").textContent = result["Vintage"];
+                        document.getElementById("resultBox").style.display = "block";
+                    } else {
+                        alert("Invalid Contract ID. Please try again.");
+                    }
+                })
+                .catch(error => console.error("Error fetching JSON:", error));
         }
 
-        function getWaiverPercentage(vintage, lsaValue) {
-            if (lsaValue <= 100000) return 70;
-            if (lsaValue > 100000 && lsaValue <= 1000000) return vintage === "< 12 Months" ? 75 : 80;
-            if (lsaValue > 1000000) return vintage === "> 12 Months" ? 75 : 65;
-            return 0;
-        }
-
-        function resetFields() {
-            document.getElementById("contractId").value = "";
-            document.getElementById("result").style.display = "none";
+        function resetForm() {
+            document.getElementById("contractID").value = "";
+            document.getElementById("resultBox").style.display = "none";
         }
     </script>
 </body>
