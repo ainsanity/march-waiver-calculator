@@ -15,8 +15,8 @@
         .container {
             max-width: 400px;
             margin: auto;
-            background: rgba(255, 255, 255, 0.2);
             padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 10px;
         }
         input, button {
@@ -24,12 +24,16 @@
             padding: 10px;
             margin: 10px 0;
             font-size: 16px;
+            border: none;
+            border-radius: 5px;
+        }
+        input {
+            background: white;
+            color: black;
         }
         button {
             background: #ff9800;
-            border: none;
             color: white;
-            font-weight: bold;
             cursor: pointer;
         }
         button:hover {
@@ -39,75 +43,64 @@
 </head>
 <body>
 
-    <h2>March 2025 Special Waiver Approval</h2>
-
+    <h1>March 2025 Special Waiver Approval</h1>
     <div class="container">
-        <label>Enter Contract ID:</label>
-        <input type="number" id="contractID" placeholder="Enter Contract ID">
+        <label for="contractId">Enter Contract ID:</label>
+        <input type="text" id="contractId" placeholder="Enter Contract ID">
         <button onclick="fetchDetails()">Calculate</button>
-        <button onclick="resetFields()">Reset</button>
-
-        <h3>Details</h3>
-        <p><strong>Customer Name:</strong> <span id="customerName">-</span></p>
-        <p><strong>LSA Value:</strong> <span id="lsaValue">-</span></p>
-        <p><strong>Vintage:</strong> <span id="vintage">-</span></p>
-        <p><strong>Waiver %:</strong> <span id="waiver">-</span></p>
-        <p><strong>Offerable Amount:</strong> <span id="offerableAmount">-</span></p>
+        <button onclick="resetForm()">Reset</button>
     </div>
 
     <script>
-        let jsonData = [];
+        let database = [];
 
-        // Load JSON file
-        fetch("database.json")
-            .then(response => response.json())
-            .then(data => jsonData = data)
-            .catch(error => console.error("Error loading JSON:", error));
+        // Load JSON Data
+        function loadDatabase() {
+            fetch("https://raw.githubusercontent.com/YOUR_USERNAME/march-waiver-calculator/main/Database.json")
+                .then(response => response.json())
+                .then(data => {
+                    database = data;
+                })
+                .catch(error => console.error("Error loading JSON:", error));
+        }
 
+        // Fetch Details Based on Contract ID
         function fetchDetails() {
-            const enteredID = parseInt(document.getElementById("contractID").value.trim());
+            let contractId = document.getElementById("contractId").value.trim();
+            let record = database.find(item => item["Contract ID"].toString() === contractId);
 
-            // Find the contract in the JSON data
-            const result = jsonData.find(entry => entry["Contract ID"] === enteredID);
-
-            if (!result) {
+            if (!record) {
                 alert("Invalid Contract ID. Please check and try again.");
                 return;
             }
 
-            // Extract values
-            const lsaValue = parseFloat(result["LSA Value"]);
-            const vintage = result["Vintage"];
-            let waiverPercentage = 0;
+            let lsaValue = Math.round(record["LSA Value"]);
+            let customerName = record["Customer Name"];
+            let vintage = record["Vintage"];
+            let waiverPercent = 0;
 
-            // Apply waiver rules
+            // Determine Waiver Percentage
             if (lsaValue <= 100000) {
-                waiverPercentage = 70;
+                waiverPercent = 70;
             } else if (lsaValue > 100000 && lsaValue <= 1000000) {
-                waiverPercentage = vintage === "< 12 Months" ? 75 : 80;
-            } else if (lsaValue > 1000000) {
-                waiverPercentage = vintage === "< 12 Months" ? 65 : 75;
+                waiverPercent = (vintage === "< 12 Months") ? 75 : 80;
+            } else {
+                waiverPercent = (vintage === "< 12 Months") ? 65 : 75;
             }
 
-            // Calculate offerable amount
-            const offerableAmount = Math.ceil(lsaValue * (1 - waiverPercentage / 100));
+            let offerableAmount = Math.ceil(lsaValue * (1 - waiverPercent / 100));
 
-            // Display results
-            document.getElementById("customerName").textContent = result["Customer Name"];
-            document.getElementById("lsaValue").textContent = lsaValue.toLocaleString();
-            document.getElementById("vintage").textContent = vintage;
-            document.getElementById("waiver").textContent = waiverPercentage + "%";
-            document.getElementById("offerableAmount").textContent = offerableAmount.toLocaleString();
+            // Show Popup with Results
+            alert(`Customer Name: ${customerName}\nLSA Value: ${lsaValue}\nVintage: ${vintage}\nWaiver: ${waiverPercent}%\nOfferable Amount: ${offerableAmount}`);
         }
 
-        function resetFields() {
-            document.getElementById("contractID").value = "";
-            document.getElementById("customerName").textContent = "-";
-            document.getElementById("lsaValue").textContent = "-";
-            document.getElementById("vintage").textContent = "-";
-            document.getElementById("waiver").textContent = "-";
-            document.getElementById("offerableAmount").textContent = "-";
+        // Reset Form
+        function resetForm() {
+            document.getElementById("contractId").value = "";
         }
+
+        // Load Data on Page Load
+        window.onload = loadDatabase;
     </script>
 
 </body>
